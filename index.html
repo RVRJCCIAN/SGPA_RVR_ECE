@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SGPA Calculator (R20 - ECE)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #eef1f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background-color: #fff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+    select, button {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 16px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    .subject-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .subject-row label {
+      flex: 1 1 65%;
+      margin-bottom: 5px;
+    }
+    .subject-row select {
+      flex: 1 1 30%;
+    }
+    #calculate {
+      background-color: #007bff;
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      transition: 0.3s;
+    }
+    #calculate:hover {
+      background-color: #0056b3;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      text-align: center;
+      font-weight: bold;
+      color: #222;
+    }
+
+    @media (max-width: 600px) {
+      .subject-row {
+        flex-direction: column;
+      }
+      .subject-row label,
+      .subject-row select {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>SGPA Calculator (R20 - ECE)</h2>
+
+  <label for="semester">Select Semester:</label>
+  <select id="semester" onchange="renderSubjects()">
+    <option value="">-- Select Semester --</option>
+    <option value="1">Semester 1</option>
+    <option value="2">Semester 2</option>
+    <option value="3">Semester 3</option>
+    <option value="4">Semester 4</option>
+    <option value="5">Semester 5</option>
+    <option value="6">Semester 6</option>
+    <option value="7">Semester 7</option>
+  </select>
+
+  <form id="gradesForm"></form>
+
+  <button id="calculate" onclick="calculateSGPA()">Calculate SGPA</button>
+  <div id="result"></div>
+</div>
+
+<script>
+  const gradePoints = {
+    "A+": 10,
+    "A": 9,
+    "B": 8,
+    "C": 7,
+    "D": 6,
+    "E": 5,
+    "F": 0
+  };
+
+  const semesters = {
+    1: [
+      { code: "EC111", name: "Mathematics - I", credits: 3 },
+      { code: "EC112", name: "Engineering Physics", credits: 3 },
+      { code: "EC113", name: "English for Communication Skills", credits: 3 },
+      { code: "EC114", name: "Circuit Theory", credits: 3 },
+      { code: "EC151", name: "Engineering Physics Lab", credits: 1.5 },
+      { code: "EC152", name: "English Language Communication Skills Lab", credits: 1 },
+      { code: "EC153", name: "Engineering Workshop Practice Lab", credits: 3 },
+      { code: "CSL154", name: "Introduction to Python Programming Lab", credits: 2 },
+      { code: "ECMC1", name: "Environmental Science", credits: 0 },
+    ],
+    2: [
+      { code: "EC121", name: "Mathematics - II", credits: 3 },
+      { code: "EC122", name: "Engineering Chemistry", credits: 3 },
+      { code: "EC123", name: "Electronic Devices", credits: 3 },
+      { code: "EC124", name: "Programing for Problem Solving", credits: 3 },
+      { code: "EC161", name: "Engineering Chemistry Lab", credits: 1.5 },
+      { code: "EC162", name: "Programing for Problem Solving Lab", credits: 2 },
+      { code: "EC163", name: "Engineering Graphics & Design Lab", credits: 3 },
+      { code: "EC164", name: "Electronic Devices Lab", credits: 1},
+      { code: "ECMC2", name: "Constitution of India", credits: 0 },
+    ],
+    3: [
+      
+      { code: "EC211", name: "Mathematics-III", credits: 3 },
+      { code: "EC212", name: "Data Structures using Python", credits: 4 },
+      { code: "EC213", name: "Digital Electronics & Logic Design", credits:  3},
+      { code: "EC214", name: "Signals & Systems", credits: 3 },
+      { code: "EC215", name: "Analog Circuits", credits: 3 },
+      { code: "EC251", name: "Data Structures using Python Lab", credits: 1 },
+      { code: "EC252", name: "Digital Electronics & Logic Design Lab", credits: 1.5 },
+      { code: "EC253", name: "Signals & Systems Lab", credits: 1 },
+      { code: "ECSL1", name: "Skill Oriented Course-I", credits: 2 },
+      { code: "ECMC3", name: "Ethics & Human Values", credits: 0 },
+    ],
+    4: [
+      { code: "EC221", name: "Electromagnetic Fields & Transmission Lines", credits: 3 },
+      { code: "EC222", name: "Analog Communication", credits: 3 },
+      { code: "EC223", name: "Digital Signal Processing", credits: 4 },
+      { code: "EC224", name: "Microprocessors and Microcontrollers", credits: 3 },
+      { code: "EC225", name: "Economics for Engineers", credits: 3 },
+      { code: "EC261", name: "Analog Electronics Lab", credits: 1.5 },
+      { code: "EC262", name: "Digital Signal Processing Lab", credits: 1},
+      { code: "EC263", name: "Microprocessors and Microcontrollers Lab", credits: 1},
+      { code: "ECSL2", name: "Skill Oriented Course-II", credits: 2 },
+      { code: "ECMC4", name: "Design Thinking & Product Innovation", credits: 0 },
+    ],
+    5: [
+      { code: "EC311", name: "Antennas & Wave Propagation", credits: 3 },
+      { code: "EC312", name: "VLSI Design", credits: 3 },
+      { code: "EC313", name: "Digital Communication", credits: 3 },
+      { code: "EC314", name: "Professional Elective-I", credits: 3 },
+      { code: "EC315", name: "Open / Job-Oriented Elective-I", credits: 3 },
+      { code: "EC351", name: "Analog & Digital Communication Lab", credits: 1.5 },
+      { code: "EC352", name: "HDL Programming Lab", credits: 2 },
+      { code: "EC353", name: "Summer Internship", credits: 1.5},
+      { code: "ECSL3", name: "Skill Oriented Course-III", credits: 2 },
+    ],
+    6: [
+      { code: "EC321", name: "Integrated Circuits & Applications", credits: 3 },
+      { code: "EC322", name: "Microwave Engineering", credits: 3 },
+      { code: "EC323", name: "Digital Image Processing", credits: 3 },
+      { code: "EC324", name: "	Professional Elective-II", credits: 3 },
+      { code: "EC325", name: "	Open / Job-Oriented Elective-II", credits: 3 },
+      { code: "EC361", name: "	Integrated Circuits & Applications Lab", credits: 1.5 },
+      { code: "EC362", name: "	Advanced Communication Lab", credits: 1.5 },
+      { code: "EC363", name: "Embedded Systems Lab", credits: 1 },
+      { code: "ECSL4", name: "Skill Oriented Course-IV", credits: 2 },
+    ],
+    7: [
+      { code: "EC411", name: "Humanities Elective", credits: 3 },
+      { code: "EC412", name: "Professional Elective-III", credits: 3 },
+      { code: "EC413", name: "Professional Elective-IV", credits: 3 },
+      { code: "EC414", name: "Professional Elective-V (MOOC)", credits: 3 },
+      { code: "EC415", name: "Open / Job-Oriented Elective-III", credits: 3 },
+      { code: "EC416", name: "	Open / Job-Oriented Elective-IV (MOOC)", credits: 3},
+      { code: "EC451", name: "	Internship / Certification", credits: 3},
+      { code: "ECSL5", name: "Skill Oriented Course-V", credits: 2 },
+    ]
+  };
+
+  function renderSubjects() {
+    const semester = document.getElementById('semester').value;
+    const form = document.getElementById('gradesForm');
+    form.innerHTML = '';
+
+    if (!semester || !semesters[semester]) return;
+
+    semesters[semester].forEach((subject, i) => {
+      const row = document.createElement('div');
+      row.className = 'subject-row';
+
+      const label = document.createElement('label');
+      label.textContent = `${subject.code} - ${subject.name}`;
+
+      const select = document.createElement('select');
+      select.name = `grade_${i}`;
+      select.dataset.credits = subject.credits;
+
+      ["A+", "A", "B", "C", "D", "E", "F"].forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        select.appendChild(opt);
+      });
+
+      row.appendChild(label);
+      row.appendChild(select);
+      form.appendChild(row);
+    });
+  }
+
+  function calculateSGPA() {
+    const form = document.getElementById('gradesForm');
+    const selects = form.querySelectorAll('select');
+    let totalPoints = 0;
+    let totalCredits = 0;
+
+    selects.forEach(select => {
+      const grade = select.value;
+      const credit = parseFloat(select.dataset.credits);
+      totalPoints += credit * gradePoints[grade];
+      totalCredits += credit;
+    });
+
+    if (totalCredits === 0) {
+      document.getElementById('result').textContent = "Please select grades.";
+      return;
+    }
+
+    const sgpa = (totalPoints / totalCredits).toFixed(2);
+    document.getElementById('result').textContent = `Your SGPA is: ${sgpa}`;
+  }
+</script>
+
+</body>
+</html>
